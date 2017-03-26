@@ -3,6 +3,9 @@
 #include <inc/shell.h>
 #include <inc/timer.h>
 
+extern void settextcolor();
+int chgcolor(int argc, char **argv);
+
 struct Command {
 	const char *name;
 	const char *desc;
@@ -13,7 +16,8 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
-	{ "print_tick", "Display system tick", print_tick }
+	{ "print_tick", "Display system tick", print_tick },
+	{ "chgcolor" , "Change color" , chgcolor}
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -35,11 +39,30 @@ int mon_kerninfo(int argc, char **argv)
    *       Use PROVIDE inside linker script and calculate the
    *       offset.
    */
+	extern char _start[], etext[], edata[], end[];
+	cprintf("Kernel code base start=0x%08x size = %d\n", _start, etext-_start);
+	cprintf("Kernel data base start=0x%08x size = %d\n", edata, end-edata);
+	cprintf("Kernel executable memory footprint: %dKB\n", (end-_start)/1024);
+
 	return 0;
 }
 int print_tick(int argc, char **argv)
 {
 	cprintf("Now tick = %d\n", get_tick());
+}
+
+
+//My add
+
+int chgcolor(int argc, char**argv)
+{
+	if (argc == 1)
+		cprintf("No input text color!\n");
+	else if (argc > 1){
+		settextcolor(*argv[1], 0);
+		cprintf("Change color %d!\n", *argv[1]-48);
+	}
+	return 0;
 }
 
 #define WHITESPACE "\t\r\n "

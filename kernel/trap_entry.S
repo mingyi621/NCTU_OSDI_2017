@@ -23,6 +23,16 @@
  *       when declaring interface for ISRs.
  */
 
+//My Add
+
+//TRAPHANDLER_NOEC(Default_ISR, T_DEFAULT)
+
+TRAPHANDLER_NOEC(timer_entry,IRQ_OFFSET+IRQ_TIMER);
+TRAPHANDLER_NOEC(kbd_entry,IRQ_OFFSET+IRQ_KBD);
+
+//My add end
+
+
 .globl default_trap_handler;
 _alltraps:
   /* TODO: Since we are going to call default_trap_handler, we have to prepare
@@ -36,9 +46,26 @@ _alltraps:
    *       You may want to leverage the "pusha" instructions to reduce your work of
    *       pushing all the general purpose registers into the stack.
 	 */
+//My add
 
+	pushl 	%ds
+	pushl 	%es
+	pushal
+
+//	movl	$GD_KD , %eax
+//	movw	%ax, %ds
+//	movw	%ax, %es
+
+//My add end
 	pushl %esp # Pass a pointer which points to the Trapframe as an argument to default_trap_handler()
 	call default_trap_handler
+
+//My add
+	popl	%esp
+	popal
+	popl	%es
+	popl	%ds
+//My add end
 
 	add $8, %esp # Cleans up the pushed error code and pushed ISR number
 	iret # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!

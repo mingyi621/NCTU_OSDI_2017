@@ -2,6 +2,12 @@
 #include <inc/mmu.h>
 #include <inc/x86.h>
 
+#include <inc/stdio.h>
+
+//#include <kernel/printf.c>
+//#include <kernel/kbd.c>
+//#include <kernel/trap_entry.S>
+
 /* For debugging, so print_trapframe can distinguish between printing
  * a saved trapframe and printing the current trapframe and print some
  * additional information in the latter case.
@@ -15,6 +21,12 @@ static struct Trapframe *last_tf;
  *       Interrupt descriptor table must be built at run time because shifted
  *       function addresses can't be represented in relocation records.
  */
+
+//My Add
+struct Gatedesc idt[256] = { { 0 } };
+struct Pseudodesc idt_pd = {
+	sizeof(idt) - 1, (uint32_t) idt
+};
 
 
 /* For debugging */
@@ -118,8 +130,68 @@ trap_dispatch(struct Trapframe *tf)
    *       already. Please reference in kernel/kbd.c and kernel/timer.c
    */
 
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SPURIOUS) {
+		cprintf("Spurious interrupt on irq 7\n");
+		print_trapframe(tf);
+		return;
+	}
+
+//My add 
+	extern void timer_handler();
+	extern void kbd_intr();
+	switch(tf->tf_trapno){
+/*		case T_BRKPT: {
+			monitor(tf);
+			break;
+		}
+		case T_PGFLT: {
+			page_fault_handler(tf);
+			break;
+		}
+*/		case IRQ_OFFSET + IRQ_TIMER: {
+			timer_handler();
+			break;
+		}
+		case IRQ_OFFSET + IRQ_KBD:{
+			kbd_intr();
+			break;
+		}
+
+/*		case IRQ_OFFSET + IRQ_SERIAL: {
+			serial_intr();
+			break;
+		}
+		case T_SYSCALL: {
+			int32_t r = syscall(
+				tf->tf_regs.reg_eax, 
+				tf->tf_regs.reg_edx,
+				tf->tf_regs.reg_ecx,
+				tf->tf_regs.reg_ebx,
+				tf->tf_regs.reg_edi,
+				tf->tf_regs.reg_esi);
+			if(tf->tf_regs.reg_eax == SYS_ipc_recv) {
+				cprintf("return value is %d, %e\n", r, r);
+				while(1);
+			}
+			tf->tf_regs.reg_eax = r;
+			break;
+		}*/
+		default:{
+			print_trapframe(tf);
+//			if(tf->tf_cs == GD_KT)
+//				panic("unhandled trap in kernel");
+//			else {
+//				env_destroy(curenv);
+//				return;
+//			}
+		}
+	}
+//My add end	
+	
+	
+
 	// Unexpected trap: The user process or the kernel has a bug.
-	print_trapframe(tf);
+//	print_trapframe(tf);
 }
 
 /* 
@@ -161,7 +233,12 @@ void trap_init()
    */
 
 	/* Keyboard interrupt setup */
+	extern void kbd_entry();
 	/* Timer Trap setup */
+	extern void timer_entry();
   /* Load IDT */
+	SETGATE(idt[32], 0, GD_KT, timer_entry, 0);
+	SETGATE(idt[33], 0, GD_KT, kbd_entry, 0);
 
+	lidt(&idt_pd);
 }
