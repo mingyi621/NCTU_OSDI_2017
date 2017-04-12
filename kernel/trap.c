@@ -137,6 +137,7 @@ trap_dispatch(struct Trapframe *tf)
 	}
 
 //My add 
+//	extern void page_fault_handler();
 	extern void timer_handler();
 	extern void kbd_intr();
 	switch(tf->tf_trapno){
@@ -148,7 +149,13 @@ trap_dispatch(struct Trapframe *tf)
 			page_fault_handler(tf);
 			break;
 		}
-*/		case IRQ_OFFSET + IRQ_TIMER: {
+*/		case T_PGFLT: {
+			cprintf("[0556175] Page Fault @ 0x%8x\n",rcr2());
+			while(1);
+			break;
+		}
+	
+		case IRQ_OFFSET + IRQ_TIMER: {
 			timer_handler();
 			break;
 		}
@@ -236,7 +243,10 @@ void trap_init()
 	extern void kbd_entry();
 	/* Timer Trap setup */
 	extern void timer_entry();
+	/* Page Fault Setup */
+	extern void page_fault_entry();
   /* Load IDT */
+	SETGATE(idt[14], 0, GD_KT, page_fault_entry, 0);
 	SETGATE(idt[32], 0, GD_KT, timer_entry, 0);
 	SETGATE(idt[33], 0, GD_KT, kbd_entry, 0);
 
