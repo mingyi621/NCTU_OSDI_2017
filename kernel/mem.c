@@ -202,7 +202,7 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Map VA range [IOPHYSMEM, EXTPHYSMEM) to PA range [IOPHYSMEM, EXTPHYSMEM)
     boot_map_region(kern_pgdir, IOPHYSMEM, ROUNDUP((EXTPHYSMEM - IOPHYSMEM), PGSIZE), IOPHYSMEM, (PTE_W) | (PTE_P));
-	boot_map_region(kern_pgdir, 0x7000, PGSIZE, 0x7000, (PTE_W) | (PTE_P));
+//	boot_map_region(kern_pgdir, 0x7000, PGSIZE, 0x7000, (PTE_W) | (PTE_P));
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -214,6 +214,7 @@ mem_init(void)
 	//
 	// If the machine reboots at this point, you've probably set up your
 	// kern_pgdir wrong.
+
 	lcr3(PADDR(kern_pgdir));
 
 	check_page_free_list(0);
@@ -719,7 +720,7 @@ check_page_alloc(void)
 	assert(pp1 && pp1 != pp0);
 	assert(pp2 && pp2 != pp1 && pp2 != pp0);
 	assert(!page_alloc(0));
-
+//過不了下一行
 	// test flags
 	memset(page2kva(pp0), 1, PGSIZE);
 	page_free(pp0);
