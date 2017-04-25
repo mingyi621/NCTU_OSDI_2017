@@ -50,21 +50,9 @@ jmp loop
 .p2align 2                                # force 4 byte alignment
 gdt:
 SEG_NULL    # NULL segment
-
-<<<<<<< HEAD
-	SEG_NULL    # NULL segment
-	SEG(STA_X|STA_R, 0x0, 0xffffffff)     	# Kernel code segment
-	SEG(STA_W, 0x0, 0xffffffff)    		# Kernel data segment
-=======
 SEG(STA_X|STA_R, 0x0, 0xffffffff)	# Kernel code segment
 SEG(STA_W, 0x0, 0xffffffff) 		# Kernel data segment
->>>>>>> 94cc46b5d5f5fdb973a920950f4c0807ab017a2d
 
 gdtdesc: 
-<<<<<<< HEAD
-	.word	0x17	# gdt limit
-	.word	gdt,0	# gdt base
-=======
 .word	0x17		# sizeof(gdt) - 1
 .word	gdt,0	# gdt base = 07xxx
->>>>>>> 94cc46b5d5f5fdb973a920950f4c0807ab017a2d

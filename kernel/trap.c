@@ -195,10 +195,10 @@ trap_dispatch(struct Trapframe *tf)
 
 //My add 
 //	extern void page_fault_handler();
-	extern void timer_handler();
+/*1	extern void timer_handler();
 	extern void kbd_intr();
 	switch(tf->tf_trapno){
-/*		case T_BRKPT: {
+		case T_BRKPT: {
 			monitor(tf);
 			break;
 		}
@@ -206,7 +206,7 @@ trap_dispatch(struct Trapframe *tf)
 			page_fault_handler(tf);
 			break;
 		}
-*/		case T_PGFLT: {
+		case T_PGFLT: {
 			cprintf("[0556175] Page Fault @ 0x%8x\n",rcr2());
 			while(1);
 			break;
@@ -221,7 +221,7 @@ trap_dispatch(struct Trapframe *tf)
 			break;
 		}
 
-/*		case IRQ_OFFSET + IRQ_SERIAL: {
+		case IRQ_OFFSET + IRQ_SERIAL: {
 			serial_intr();
 			break;
 		}
@@ -239,29 +239,30 @@ trap_dispatch(struct Trapframe *tf)
 			}
 			tf->tf_regs.reg_eax = r;
 			break;
-		}*/
+		}
 		default:{
 			print_trapframe(tf);
+*/
 //			if(tf->tf_cs == GD_KT)
 //				panic("unhandled trap in kernel");
 //			else {
 //				env_destroy(curenv);
 //				return;
 //			}
-		}
-	}
+//		}
+//	}
 //My add end	
 	
 	
 
 	// Unexpected trap: The user process or the kernel has a bug.
-<<<<<<< HEAD
+//<<<<<<< HEAD
 //	print_trapframe(tf);
-=======
+//=======
 	print_trapframe(tf);
 	panic("Unexpected trap!");
 	
->>>>>>> 94cc46b5d5f5fdb973a920950f4c0807ab017a2d
+//>>>>>>> 94cc46b5d5f5fdb973a920950f4c0807ab017a2d
 }
 
 void default_trap_handler(struct Trapframe *tf)

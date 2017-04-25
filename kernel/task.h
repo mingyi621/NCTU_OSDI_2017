@@ -36,5 +36,7 @@ void env_pop_tf(struct Trapframe *tf);
  * Interface for real implementation of kill and fork
  * Since their real implementation should be in kernel/task.c
  */
+int sys_fork();
+void sys_kill(int pid);
 
 #endif

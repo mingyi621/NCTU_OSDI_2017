@@ -23,4 +23,55 @@ void sched_yield(void)
 {
 	extern Task tasks[];
 	extern Task *cur_task;
+	int i;
+	int j=0;
+	i = (cur_task->task_id+1)%NR_TASKS;
+	for(j=0;j<NR_TASKS;j++){
+		if(tasks[i].state == TASK_RUNNABLE)
+		{
+			if(cur_task->state == TASK_RUNNING  )
+			{
+				cur_task->state = TASK_RUNNABLE;
+				cur_task->remind_ticks = TIME_QUANT;
+				cur_task = &tasks[i];
+				lcr3( PADDR( tasks[i].pgdir ) );
+				tasks[i].state = TASK_RUNNING;
+				break;
+			}
+			
+			if(cur_task->state == TASK_SLEEP)
+			{
+				cur_task = &tasks[i];		
+				lcr3( PADDR( tasks[i].pgdir ) );
+				tasks[i].state = TASK_RUNNING;
+				break;
+			}
+			
+			if(cur_task->state == TASK_STOP)
+			{
+				cur_task = &tasks[i];
+				lcr3( PADDR( tasks[i].pgdir ) );
+                                tasks[i].state = TASK_RUNNING;
+                                break;
+			}
+			if(cur_task->state == TASK_FREE)
+			{
+				cur_task = &tasks[i];
+				lcr3( PADDR( tasks[i].pgdir ) );
+                                tasks[i].state = TASK_RUNNING;
+                                break;
+				
+			}
+		}
+		else if(tasks[i].state == TASK_RUNNING)
+		{
+			cur_task = &tasks[i];
+				lcr3( PADDR( tasks[i].pgdir ) );
+			tasks[i].remind_ticks = TIME_QUANT;	
+		}
+		i = (i+1)%NR_TASKS;
+
+
+	}
+	env_pop_tf(&cur_task->tf);
 }

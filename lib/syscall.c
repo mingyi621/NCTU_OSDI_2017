@@ -54,3 +54,25 @@ puts(const char *s, size_t len)
  *
  * HINT: You can use SYSCALL_NOARG to save your time.
  */
+void sleep(uint32_t a)
+{
+	syscall(SYS_sleep,a,0,0,0,0);
+}
+void kill_self()
+{
+	syscall(SYS_kill,0,0,0,0,0);
+}
+void settextcolor(unsigned char a,unsigned char b)
+{
+	syscall(SYS_settextcolor,a,b,0,0,0);
+}
+int32_t cls()
+{
+	syscall(SYS_cls,0,0,0,0,0);
+}
+
+SYSCALL_NOARG(fork,int32_t);
+SYSCALL_NOARG(get_num_used_page,int32_t);
+SYSCALL_NOARG(get_num_free_page,int32_t);
+SYSCALL_NOARG(get_ticks,unsigned long);
+SYSCALL_NOARG(getpid,int32_t);

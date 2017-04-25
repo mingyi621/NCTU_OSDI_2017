@@ -23,6 +23,14 @@ size_t                   num_free_pages;
 // --------------------------------------------------------------
 // Detect machine's physical memory setup.
 // --------------------------------------------------------------
+static int mytrace(struct PageInfo *a){
+	int c = 0;
+	while(a!=NULL){
+		c++;
+		a = a->pp_link;
+	}
+	return c;
+}
 
 static int
 nvram_read(int r)
@@ -642,6 +650,21 @@ setupvm(pde_t *pgdir, uint32_t start, uint32_t size)
 pde_t *
 setupkvm()
 {
+	struct PageInfo *page = NULL;
+	if ( !(page = page_alloc(ALLOC_ZERO)) ) {
+		return -E_NO_MEM;
+	}
+	(page->pp_ref) ++;
+	pde_t *this = page2kva( page );
+	memcpy(this, kern_pgdir, PGSIZE);
+	int i;	
+	for( i =0; i < 1024;i++ )
+	{
+		if( kern_pgdir[i]&PTE_P )
+			(*pa2page( PTE_ADDR(kern_pgdir[i])  )).pp_ref++;
+	}
+	
+	return this;
 }
 
 
@@ -652,14 +675,16 @@ setupkvm()
 int32_t
 sys_get_num_free_page(void)
 {
-  return num_free_pages;
+	num_free_pages = mytrace(page_free_list);
+  	return num_free_pages;
 }
 
 /* This is the system call implementation of get_num_used_page */
 int32_t
 sys_get_num_used_page(void)
-{
-  return npages - num_free_pages; 
+{	
+	num_free_pages = mytrace(page_free_list);
+  	return npages - num_free_pages; 
 }
 
 // --------------------------------------------------------------
