@@ -27,7 +27,7 @@ static int mytrace(struct PageInfo *a){
 	int c = 0;
 	while(a!=NULL){
 		c++;
-		a = a->pp_link;
+		a=a->pp_link;	
 	}
 	return c;
 }
@@ -156,7 +156,7 @@ mem_init(void)
 	// to initialize all fields of each struct PageInfo to 0.
 	// Your code goes here:
     /* TODO */
-	pages = (struct PageInfo*)boot_alloc(npages * sizeof(struct PageInfo())); //分配一個array紀錄page是否被使用(PageInfo)
+	pages = (struct PageInfo*)boot_alloc(npages * sizeof(struct PageInfo)); //分配一個array紀錄page是否被使用(PageInfo)
 	memset(pages, 0, npages * sizeof(struct PageInfo)); //將第一變數設為第三變數個0
 
 	//////////////////////////////////////////////////////////////////////
@@ -211,7 +211,7 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Map VA range [IOPHYSMEM, EXTPHYSMEM) to PA range [IOPHYSMEM, EXTPHYSMEM)
     boot_map_region(kern_pgdir, IOPHYSMEM, ROUNDUP((EXTPHYSMEM - IOPHYSMEM), PGSIZE), IOPHYSMEM, (PTE_W) | (PTE_P));
-//	boot_map_region(kern_pgdir, 0x7000, PGSIZE, 0x7000, (PTE_W) | (PTE_P));
+	boot_map_region(kern_pgdir, 0x7000, PGSIZE, 0x7000, (PTE_W) | (PTE_P));
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();

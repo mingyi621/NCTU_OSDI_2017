@@ -98,10 +98,9 @@ extern void sched_yield(void);
 int task_create()
 {
 	Task *ts = NULL;
-//	struct PageInfo *pages[10];
 	struct PageInfo *pp;
 	/* Find a free task structure */
-	int i,task_id;
+/*	int i,task_id;
 	bool find_free_task = false;
 	int id_start = cur_task ? cur_task->task_id : -1;
 	for(i = (id_start + 1) % NR_TASKS; i != id_start ; i = (i+1) % NR_TASKS){
@@ -114,8 +113,8 @@ int task_create()
 	}
 	if(!find_free_task)
 		return -1;
-
-/*	int i;
+*/
+	int i;
 	for(i=0;i<NR_TASKS;i++){
 		if(tasks[i].state == TASK_FREE){
 			ts = &(tasks[i]);
@@ -124,7 +123,7 @@ int task_create()
 	}
 	if(i>=NR_TASKS)
 		return -1;	
-*/
+
   	/* Setup Page Directory and pages for kernel*/
   	if (!(ts->pgdir = setupkvm()))
     		panic("Not enough memory for per process page directory!\n");
@@ -257,37 +256,56 @@ void sys_kill(int pid)
 int sys_fork()
 {
   	/* pid for newly created process */
-  	int pid, i;
-	Task *new_task;
-	if ((uint32_t)cur_task)
-	{
-		pid = task_create();
-		if(pid < 0)
-			return -1;
-
-		new_task = &tasks[pid];
-		new_task->tf = cur_task->tf;
-
-		for (i = USTACKTOP - USR_STACK_SIZE; i < USTACKTOP; i += PGSIZE){
-			struct PageInfo* dst_page;
-			uint32_t dst_addr;
-			dst_page = page_lookup(new_task->pgdir, i, NULL);
-			dst_addr = page2kva(dst_page);
-
-			memcpy(dst_addr, i, PGSIZE);
-		}
-    		/* Step 4: All user program use the same code for now */
-    		setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-    		setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-    		setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-    		setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-
-		new_task->tf.tf_regs.reg_eax = 0;
-
-		return pid;
+//  	int pid, i;
+//	Task *new_task;
+//	if ((uint32_t)cur_task)
+//	{
+//		pid = task_create();
+//		if(pid < 0)
+//			return -1;
+//
+//		new_task = &tasks[pid];
+//		new_task->tf = cur_task->tf;
+//
+//		for (i = USTACKTOP - USR_STACK_SIZE; i < USTACKTOP; i += PGSIZE){
+//			struct PageInfo* dst_page;
+//			uint32_t dst_addr;
+//			dst_page = page_lookup(new_task->pgdir, i, NULL);
+//			dst_addr = page2kva(dst_page);
+//
+//			memcpy(dst_addr, i, PGSIZE);
+//		}
+//    		/* Step 4: All user program use the same code for now */
+//   		setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+//    		setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+//    		setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+//  		setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+//
+//		new_task->tf.tf_regs.reg_eax = 0;
+//
+//		return pid;
+//	}
+//	return -1;
+	int pid;
+	pid = task_create();
+	if(pid<0)
+		return -1;
+	int j;
+	memcpy(&(tasks[pid].tf),&(cur_task->tf),sizeof(struct Trapframe));
+	for(j=(USTACKTOP-USR_STACK_SIZE); j<USTACKTOP; j+=PGSIZE){
+		struct PageInfo* a;
+		a = page_lookup(tasks[pid].pgdir,(void *)j,NULL);
+		int *tmp = page2kva(a);
+		memcpy(tmp,j,PGSIZE);
 	}
-	return -1;
-
+	if((uint32_t)cur_task){
+		setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+		setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+		setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+		setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+	}
+	tasks[pid].tf.tf_regs.reg_eax = 0;
+	return pid;
 }
 
 /* TODO: Lab5
