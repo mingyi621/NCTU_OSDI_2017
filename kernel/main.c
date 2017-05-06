@@ -42,7 +42,10 @@ void kernel_main(void)
   /* Enable interrupt */
  	 __asm __volatile("sti");
 
-  	lcr3(PADDR(cur_task->pgdir));
+//  	lcr3(PADDR(cur_task->pgdir));
+
+	int f=cpunum();
+	lcr3(PADDR(cpus[f].cpu_task->pgdir));	
 
 
   /* Move to user mode */
@@ -53,7 +56,8 @@ void kernel_main(void)
   		"pushl %2\n\t" \
   		"pushl %3\n\t" \
   		"iret\n" \
-  		:: "m" (cur_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (cur_task->tf.tf_eip)
+//lab5 		:: "m" (cur_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (cur_task->tf.tf_eip)
+		:: "m" (cpus[f].cpu_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (cpus[f].cpu_task->tf.tf_eip)
   		:"ax");
 }
 
@@ -80,6 +84,17 @@ boot_aps(void)
 	//      -- Wait for the CPU to finish some basic setup in mp_main(
 	// 
 	// Your code here:
+	extern unsigned char mpentry_start[], mpentry_end[];
+	struct CpuInfo* c;
+	memmove(KADDR(MPENTRY_PADDR), mpentry_start, mpentry_end - mpentry_start);
+	int f = cpunum();
+	for(c = cpus; c < cpus + ncpu; c++){
+		if(c != cpus + f){
+			mpentry_kstack = percpu_kstacks[c-cpus]+KSTKSIZE;
+			lapic_startap(c->cpu_id, PADDR(KADDR(MPENTRY_PADDR)));
+			while(c->cpu_status != CPU_STARTED);
+		}
+	}
 }
 
 // Setup code for APs
@@ -153,14 +168,18 @@ mp_main(void)
 	printk("SMP: CPU %d starting\n", cpunum());
 	
 	// Your code here:
+
+	lapic_init();
+	task_init_percpu();
 	
+	lidt(&idt_pd);
 
 	// TODO: Lab6
 	// Now that we have finished some basic setup, it's time to tell
 	// boot_aps() we're up ( using xchg )
 	// Your code here:
 
-
+	xchg(&thiscpu->cpu_status, CPU_STARTED);
 
 	/* Enable interrupt */
 	__asm __volatile("sti");

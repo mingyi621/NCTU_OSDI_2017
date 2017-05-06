@@ -45,10 +45,13 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
 	case SYS_getpid:
 		/* TODO: Lab 5
      * Get current task's pid
-     */		if(cur_task != NULL)
-			retVal = cur_task->task_id;
-		else
-			retVal = -1;
+     */		
+//5		if(cur_task != NULL)
+//5			retVal = cur_task->task_id;
+//5		else
+//5			retVal = -1;
+		/*lab6*/
+		retVal = thiscpu->cpu_task->task_id;
 		break;
 
 	case SYS_getcid:
@@ -60,18 +63,30 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
 		/* TODO: Lab 5
      * Yield this task
      * You can reference kernel/sched.c for yielding the task
-     */		cur_task->state = TASK_SLEEP;
-		cur_task->remind_ticks = a1;
+     */	
+//5		cur_task->state = TASK_SLEEP;
+//5		cur_task->remind_ticks = a1;
+
+		/*lab6*/
+		thiscpu->cpu_task->state = TASK_SLEEP;
+		thiscpu->cpu_task->remind_ticks = a1;
+
 		sched_yield();
-		//retVal = 0;
+		retVal = 0;
 		break;
 
 	case SYS_kill:
 		/* TODO: Lab 5
      * Kill specific task
      * You can reference kernel/task.c, kernel/task.h
-     */		sys_kill(a1);
-		//retVal = 0;
+     */		
+
+//5		sys_kill(a1);
+
+		/*lab6*/
+		sys_kill(thiscpu->cpu_task->task_id);
+
+		retVal = 0;
 		break;
 
  	case SYS_get_num_free_page:

@@ -101,6 +101,12 @@ _alltraps:
 	pop %ax 
 	add $4, %esp
 
+	popl %esp
+	popal
+	popl	%es
+	popl	%ds
+	addl $8, %esp # Cleans up the pushed error code and pushed ISR number
+	iret # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 
 # Return falls through to trapret...
 .globl trapret

@@ -158,7 +158,7 @@ mem_init(void)
 	// to initialize all fields of each struct PageInfo to 0.
 	// Your code goes here:
     /* TODO */
-	pages = (struct PageInfo*)boot_alloc(npages * sizeof(struct PageInfo())); //分配一個array紀錄page是否被使用(PageInfo)
+	pages = (struct PageInfo*)boot_alloc(npages * sizeof(struct PageInfo)); //分配一個array紀錄page是否被使用(PageInfo)
 	memset(pages, 0, npages * sizeof(struct PageInfo)); //將第一變數設為第三變數個0
 
 	//////////////////////////////////////////////////////////////////////
@@ -212,7 +212,7 @@ mem_init(void)
 	// Your code goes here:
 //<<<<<<< HEAD
     /* TODO */
-//	boot_map_region(kern_pgdir, KERNBASE, ROUNDUP(0xffffffff-KERNBASE, PGSIZE), 0, (PTE_W|PTE_P));
+	boot_map_region(kern_pgdir, KERNBASE, ROUNDUP(0xffffffff-KERNBASE, PGSIZE), 0, (PTE_W|PTE_P));
 //=======
 //>>>>>>> e86f6f3162a3a20b8bae55324b81cfc0942a8d86
 
@@ -273,6 +273,12 @@ mem_init_mp(void)
 	// TODO:
 	// Lab6: Your code here:
 
+	int i;
+
+	for(i=0;i<NCPU;i++){
+		boot_map_region(kern_pgdir, KSTACKTOP-i*(KSTKSIZE+KSTKGAP)-KSTKSIZE, ROUNDUP(KSTKSIZE,PGSIZE), PADDR(percpu_kstacks[i]), PTE_W | PTE_P);
+	}
+
 }
 
 // --------------------------------------------------------------
@@ -316,12 +322,11 @@ page_init(void)
 	 *
 	 */
     size_t i;
-//	uint32_t pa;
 	page_free_list = NULL;
 	int num_alloc = ((uint32_t)boot_alloc(0) - KERNBASE) / PGSIZE;
 	int num_iohole = 96;
 	for (i = 0; i < npages; i++) {
-		if(i == 0){
+		if(i == 0 || i == MPENTRY_PADDR/PGSIZE){
 			pages[0].pp_ref = 1;
 			pages[0].pp_link = NULL;
 		}
@@ -330,9 +335,6 @@ page_init(void)
         		pages[i].pp_link = page_free_list;
 	       		page_free_list = &pages[i];
 		}
-//		else if(i<(EXTPHYSMEM/PGSIZE) || i<=(((uint32_t)nextfree-KERNBASE)>>PGSHIFT)){
-//		else if((i>=PGNUM(IOPHYSMEM)) && (i< PGNUM(EXTPHYSMEM))){
-//		else if(i<(EXTPHYSMEM/PGSIZE)){
 		else if(i >= npages_basemem && i < npages_basemem + num_iohole + num_alloc){
 			pages[i].pp_ref = 1;
 			pages[i].pp_link = NULL;
@@ -342,7 +344,6 @@ page_init(void)
 			pages[i].pp_link = page_free_list;
 			page_free_list = &pages[i];
 		}
-//		pa = page2pa(&pages[i]);
     }
 /*	for (i = 1; i < npages; i++){
 		if(i==MPENTRY_PADDR/PGSIZE){
@@ -355,6 +356,10 @@ page_init(void)
 			page_free_list = &pages[i];
 		}
 		else if((i>=PGNUM(IOPHYSMEM)) && (i< PGNUM(EXTPHYSMEM))){
+			pages[i].pp_ref = 1;
+			pages[i].pp_link = NULL;
+		}
+		else if((i>=PGNUM(EXTPHYSMEM)) && (i<PGNUM(PADDR(boot_alloc(0))))){
 			pages[i].pp_ref = 1;
 			pages[i].pp_link = NULL;
 		}
@@ -422,8 +427,8 @@ page_free(struct PageInfo *pp)
 	// Hint: You may want to panic if pp->pp_ref is nonzero or
 	// pp->pp_link is not NULL.
     /* TODO */
-	assert(pp->pp_ref == 0);
-	assert(pp->pp_link == NULL);
+//	assert(pp->pp_ref == 0);
+//	assert(pp->pp_link == NULL);
 	pp->pp_link = page_free_list;
 	page_free_list = pp;
 }
@@ -509,6 +514,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 	page_off = PTX(va);
 	page_base = KADDR(PTE_ADDR(* dic_entry_ptr));
 	return & page_base[page_off];
+
 }
 
 //
@@ -526,23 +532,37 @@ static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {	//映射一個虛擬位置空間到一實體位置空間
     /* TODO */
-	uintptr_t  now_va = va;
+/*	uintptr_t  now_va = va;
 	physaddr_t now_pa = pa; 
 	pte_t *  pt_entry;	//page table entrance
 	
 	uint32_t iteration = size/PGSIZE;
 	unsigned int i = 0;
-//	ROUNDUP(size, PGSIZE);		//page align
 
-//	assert(size % PGSIZE == 0 || cprintf("size:%x \n",size));
-
-//	int temp = 0;
 	for(i; i < iteration; i++){
 		pt_entry = pgdir_walk(pgdir, (void *)now_va, 1);
 		*pt_entry |= PTE_ADDR(now_pa) | perm;
 		now_va += PGSIZE;
 		now_pa += PGSIZE;
+	}*/
+	uintptr_t currVA;
+	physaddr_t currPA;
+	size_t currSize;
+	for(currSize = 0 ; currSize < size ; currSize += PGSIZE)
+	{
+		pte_t* pte;
+		currVA = va + currSize;
+		currPA = pa + currSize;
+		pte = pgdir_walk(pgdir,(void*)(currVA),1);
+		if(pte!=NULL)
+		{
+			*pte = PTE_ADDR(currPA) | perm | PTE_P;
+		}
+		else{
+			panic("pgdir_walk return NULL\n");
+		}
 	}
+	
 }
 
 //
@@ -641,6 +661,8 @@ page_remove(pde_t *pgdir, void *va)
 	page_decref(pp);
 	**pte_store = 0;
 	tlb_invalidate(pgdir, va);
+
+
 }
 
 void
@@ -659,6 +681,7 @@ ptable_remove(pde_t *pgdir)
 void
 pgdir_remove(pde_t *pgdir)
 {
+//  pa2page(PADDR(pgdir))->pp_ref -=1;
   page_free(pa2page(PADDR(pgdir)));
 }
 
@@ -688,6 +711,8 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// (just like nextfree in boot_alloc).
 	static uintptr_t base = MMIOBASE;
 
+//	uintptr_t ret_base = base;
+
 	// Reserve size bytes of virtual memory starting at base and
 	// map physical pages [pa,pa+size) to virtual addresses
 	// [base,base+size).  Since this is device memory and not
@@ -708,8 +733,31 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Lab6 TODO
 	// Your code here:
 	
+	size = ROUNDUP(size,PGSIZE);
+	if((base+size) < (MMIOLIM)){
+		void *tmp;
+		tmp = base;
+		boot_map_region(kern_pgdir, base, size, pa, PTE_PCD | PTE_PWT | PTE_W);
+		base = base + size;
+		return tmp;
+	}
+	else
+		panic("mmio_map_region not implemented");
+	
 
-	panic("mmio_map_region not implemented");
+/*	boot_map_region(kern_pgdir, base, ROUNDUP(size, PGSIZE), pa, PTE_PCD|PTE_PWT|PTE_W); 
+
+    	base = base + ROUNDUP(size, PGSIZE);
+   	return ret_base;
+*/
+/*	void * ret = (void *)base;
+	size = ROUNDUP(size, PGSIZE);
+	if(base + size > MMIOLIM || base + size < base)
+		panic("mmio_map_region : reservation overflows");
+	boot_map_region(kern_pgdir, base, size, pa, PTE_PCD|PTE_PWT|PTE_W);
+	base += size;
+	return ret;
+*/
 }
 
 /* This is a simple wrapper function for mapping user program */
@@ -750,6 +798,21 @@ setupkvm()
 	}
 	
 	return this;
+
+/*	pde_t* pgdir;
+	struct PageInfo *page = page_alloc(1);
+	if(page==NULL)
+		return NULL;
+	pgdir = page2kva(page);
+
+	boot_map_region(pgdir, KERNBASE, (1<<32)-KERNBASE, 0, (PTE_W));
+	boot_map_region(pgdir, IOPHYSMEM, ROUNDUP((EXTPHYSMEM-IOPHYSMEM), PGSIZE), IOPHYSMEM, (PTE_W));
+	
+	uint32_t kstacktop_i = KSTACKTOP - cpunum() * (KSTKSIZE + KSTKGAP);
+	boot_map_region(pgdir, ROUNDDOWN(kstacktop_i, PGSIZE) - KSTKSIZE, KSTKSIZE, PADDR(percpu_kstacks[cpunum()]), PTE_W);
+	boot_map_region(pgdir, MMIOBASE + (3) * PGSIZE, PGSIZE, lapicaddr, PTE_PCD | PTE_PWT|PTE_W);
+	return pgdir;
+	*/
 }
 
 

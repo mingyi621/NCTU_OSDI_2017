@@ -42,7 +42,7 @@
 //
 void sched_yield(void)
 {
-	extern Task tasks[];
+/*lab5	extern Task tasks[];
 	extern Task *cur_task;
 	int i;
 	int j=0;
@@ -95,4 +95,68 @@ void sched_yield(void)
 
 	}
 	env_pop_tf(&cur_task->tf);
+*/
+//lab6
+extern Task tasks[];
+	extern struct CpuInfo cpus[NCPU];
+	int f = cpunum();
+	int flag;
+	flag = 0;
+	int i;
+	int j=0;
+	i = (cpus[f].cpu_rq.index + 1) % NR_TASKS;
+	for(j=0;j<NR_TASKS;j++)
+	{
+		if(cpus[f].cpu_rq.task_rq[i]!=NULL && cpus[f].cpu_rq.task_rq[i]->state == TASK_RUNNABLE)
+		{
+			if(cpus[f].cpu_task->state == TASK_RUNNING  )
+			{
+				cpus[f].cpu_task->state = TASK_RUNNABLE;
+				cpus[f].cpu_task->remind_ticks = TIME_QUANT;
+				cpus[f].cpu_task = cpus[f].cpu_rq.task_rq[i];
+				lcr3( PADDR( cpus[f].cpu_rq.task_rq[i]->pgdir ) );
+				cpus[f].cpu_rq.task_rq[i]->state = TASK_RUNNING;
+				cpus[f].cpu_rq.index = i;
+				break;
+				
+			}
+			
+			if(cpus[f].cpu_task->state == TASK_SLEEP)
+			{
+				cpus[f].cpu_task = cpus[f].cpu_rq.task_rq[i];		
+				lcr3( PADDR( cpus[f].cpu_rq.task_rq[i]->pgdir ) );
+				cpus[f].cpu_rq.task_rq[i]->state = TASK_RUNNING;
+				cpus[f].cpu_rq.index = i;
+				break;
+			}
+			
+			if(cpus[f].cpu_task->state == TASK_STOP)
+			{
+				cpus[f].cpu_task = cpus[f].cpu_rq.task_rq[i];
+				lcr3( PADDR( cpus[f].cpu_rq.task_rq[i]->pgdir ) );
+                                cpus[f].cpu_rq.task_rq[i]->state = TASK_RUNNING;
+				cpus[f].cpu_rq.index = i;
+                                break;
+			}
+			if(cpus[f].cpu_task->state == TASK_FREE)
+			{
+				cpus[f].cpu_task = cpus[f].cpu_rq.task_rq[i];
+				lcr3( PADDR( cpus[f].cpu_rq.task_rq[i]->pgdir ) );
+                                cpus[f].cpu_rq.task_rq[i]->state = TASK_RUNNING;
+				cpus[f].cpu_rq.index = i;
+                                break;
+				
+			}
+		}
+		else if(cpus[f].cpu_rq.task_rq[i]!=NULL && cpus[f].cpu_rq.task_rq[i]->state == TASK_RUNNING)
+		{
+			cpus[f].cpu_task = cpus[f].cpu_rq.task_rq[i];
+			lcr3( PADDR( cpus[f].cpu_rq.task_rq[i]->pgdir ) );
+			cpus[f].cpu_rq.task_rq[i]->remind_ticks = TIME_QUANT;	
+		}
+		i = (i+1)%NR_TASKS;
+
+
+	}
+	env_pop_tf(&cpus[f].cpu_task->tf);
 }

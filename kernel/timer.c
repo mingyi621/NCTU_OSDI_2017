@@ -28,15 +28,19 @@ void timer_handler(struct Trapframe *tf)
 {
   	extern void sched_yield();
   	int i;
-
+//lab6
+	extern struct CpuInfo cpus[NCPU];
+	int f = cpunum();
+	
   	jiffies++;
 
+	lapic_eoi();
   	extern Task tasks[];
 
-  	extern Task *cur_task;
+//  	extern Task *cur_task;
 
-  	if (cur_task != NULL)
-  	{
+//  	if (cur_task != NULL)
+//  	{
   	/* TODO: Lab 5
    	 * 1. Maintain the status of slept tasks
    	 * 
@@ -54,7 +58,7 @@ void timer_handler(struct Trapframe *tf)
 				sched_yield();
 		}
 	*/
-	for(i=0;i<NR_TASKS;i++){
+/*lab5	for(i=0;i<NR_TASKS;i++){
 		switch(tasks[i].state){
 			case TASK_SLEEP:
 				tasks[i].remind_ticks--;
@@ -71,6 +75,32 @@ void timer_handler(struct Trapframe *tf)
 	if(cur_task->remind_ticks<=0)
 		sched_yield();
   	}
+*/
+//lab6
+	for(i=0;i<NR_TASKS;i++)
+	{
+		if(cpus[f].cpu_rq.task_rq[i]!=NULL)
+		{
+		switch( cpus[f].cpu_rq.task_rq[i]->state)
+			{
+			case TASK_SLEEP:
+				cpus[f].cpu_rq.task_rq[i]->remind_ticks--;
+				if(cpus[f].cpu_rq.task_rq[i]->remind_ticks<=0)
+				{
+					cpus[f].cpu_rq.task_rq[i]->state = TASK_RUNNABLE;
+					cpus[f].cpu_rq.task_rq[i]->remind_ticks = TIME_QUANT;
+				}
+				break;
+			case TASK_RUNNING:
+				cpus[f].cpu_rq.task_rq[i]->remind_ticks --;
+				break;
+			}
+		}
+	}
+	if(cpus[f].cpu_task->remind_ticks<=0)
+	{
+		sched_yield();
+	}
 }
 
 unsigned long sys_get_ticks()

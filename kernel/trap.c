@@ -7,6 +7,8 @@
 
 #include <inc/stdio.h>
 
+#include <kernel/cpu.h>
+
 //#include <kernel/printf.c>
 //#include <kernel/kbd.c>
 //#include <kernel/trap_entry.S>
@@ -166,7 +168,12 @@ trap_dispatch(struct Trapframe *tf)
 		if ((tf->tf_cs & 3) == 3)
 		{
 			// Trapped from user mode.
-			extern Task *cur_task;
+//lab5			extern Task *cur_task;
+
+			/*lab6*/
+			extern struct CpuInfo cpus[NCPU];
+			int f;
+			f = cpunum();
 
 			// Disable interrupt first
 			// Think: Why we disable interrupt here?
@@ -175,8 +182,12 @@ trap_dispatch(struct Trapframe *tf)
 			// Copy trap frame (which is currently on the stack)
 			// into 'cur_task->tf', so that running the environment
 			// will restart at the trap point.
-			cur_task->tf = *tf;
-			tf = &(cur_task->tf);
+//lab5			cur_task->tf = *tf;
+//lab5			tf = &(cur_task->tf);
+			/*lab6*/
+			cpus[f].cpu_task->tf = *tf;
+			tf = &(cpus[f].cpu_task->tf);
+
 				
 		}
 		// Do ISR
