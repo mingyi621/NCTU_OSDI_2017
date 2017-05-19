@@ -6,6 +6,9 @@
 #include <kernel/trap.h>
 #include <inc/stdio.h>
 
+extern void sys_settextcolor(unsigned char forecolor, unsigned char backcolor); // kernel/screen.c
+extern void sys_cls(); // kernel/screen.c
+
 void do_puts(char *str, uint32_t len)
 {
 	uint32_t i;
@@ -118,25 +121,44 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
   case SYS_cls:
 		/* TODO: Lab 5
      * You can reference kernel/screen.c
-<<<<<<< HEAD
-     		sys_cls();
+     */
+		sys_cls();
 		//retVal = 0;
     		break;
 
-	}
-=======
-     */
-    break;
+//  case SYS_test:
+//		retVal = 0x12345678;
+//		break;
+
+//  case SYS_parent:
+//		retVal = cur_task->parent_id;
+//		break;
   /* TODO: Lab7 file I/O system call */
   case SYS_open:
+		retVal = sys_open(a1,a2,a3);
+		break;
   case SYS_read:
+		retVal = sys_read(a1,a2,a3);
+		break;
   case SYS_write:
+		retVal = sys_write(a1, a2, a3);
+        	break;
   case SYS_close:
+		retVal = sys_close(a1);
+        	break;
   case SYS_lseek:
+		retVal = sys_lseek(a1, a2, a3);
+        	break;
   case SYS_unlink:
-    retVal = -1; //Not yet implemented
-    break;
-  }
+//    retVal = -1; //Not yet implemented
+//    break;
+        	retVal = sys_unlink(a1);
+        	break;
+//  case SYS_list:
+//        	retVal = sys_list(a1);
+//        	break;  
+
+  	}
 //>>>>>>> 4447810545876b2afa9a5379040c05fac9e87200
 	return retVal;
 }

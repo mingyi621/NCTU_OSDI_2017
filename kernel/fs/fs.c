@@ -94,7 +94,14 @@ int fs_init()
 */
 int fs_mount(const char* device_name, const char* path, const void* data)
 {
-    return -STATUS_EIO;
+	int res;
+	if((res = f_mount(&fat, path, 1)) != 0)
+    		return -STATUS_EIO;
+	
+	memcpy(fat_fs.path, path, strlen(path));
+	printk("fs_mount mounts path: %s for device: %s\n", fat_fs.path, device_name);
+
+	return STATUS_OK;
 } 
 
 /* Note: Before call ops->open() you may copy the path and flags parameters into fd object structure */

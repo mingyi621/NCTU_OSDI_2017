@@ -4,6 +4,7 @@
 #include <fat/ff.h>
 #include <kernel/drv/disk.h>
 
+
 /*TODO: Lab7, low level file operator.
  *  You have to provide some device control interface for 
  *  FAT File System Module to communicate with the disk.
@@ -66,6 +67,8 @@ DSTATUS disk_initialize (BYTE pdrv)
   /* Note: You can create a function under disk.c  
    *       to help you get the disk status.
    */
+	printk("Disk_initialize: %d\n", pdrv);
+	return 0;
 }
 
 /**
@@ -82,6 +85,7 @@ DSTATUS disk_status (BYTE pdrv)
 /* Note: You can create a function under disk.c  
  *       to help you get the disk status.
  */
+	return 0;
 }
 
 /**
@@ -101,6 +105,7 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
     BYTE *ptr = buff;
     UINT cur_sector = sector;
     /* TODO */
+	return ide_read_sectors(DISK_ID, i, cur_sector, ptr);
 }
 
 /**
@@ -120,7 +125,7 @@ DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
     BYTE *ptr = buff;
     UINT cur_sector = sector;
     /* TODO */    
-
+	return ide_write_sectors(DISK_ID, i, sector, ptr);
 }
 
 /**
@@ -138,6 +143,12 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 {
     uint32_t *retVal = (uint32_t *)buff;
     /* TODO */    
+	switch (cmd) {
+    		case GET_SECTOR_COUNT:
+        	*retVal = 32 * (1<<20) / 512;
+       		break;
+    	}
+    	return 0;
 }
 
 /**
@@ -147,4 +158,5 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 DWORD get_fattime (void)
 {
     /* TODO */
+	return sys_get_ticks();
 }
