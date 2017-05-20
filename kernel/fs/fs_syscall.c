@@ -112,7 +112,7 @@ int sys_open(const char *file, int flags, int mode)
     
     	if (cur_fd->flags & O_APPEND) {
         	int tmp = sys_lseek(PADDR(cur_fd), 0, SEEK_END);
-        	printk("[APPEND] ret = %d, pos = %d , size = %d\n", tmp, cur_fd->pos, cur_fd->size);
+//        	printk("[APPEND] ret = %d, pos = %d , size = %d\n", tmp, cur_fd->pos, cur_fd->size);
     	} 
 
     	cur_fd->ref_count++;
@@ -133,7 +133,7 @@ int sys_close(int fd)
         	if (--cur_fd->ref_count == 0)
          	;//   strcpy(cur_fd->path, "");
     	}
-    	printk("[%s] ret = %d\n", __func__, ret_val);
+//    	printk("[%s] ret = %d\n", __func__, ret_val);
     	return ret_val; 
 }
 int sys_read(int fd, void *buf, size_t len)
@@ -148,7 +148,7 @@ int sys_read(int fd, void *buf, size_t len)
     	else if (!check_valid_fd(cur_fd))
         	return -STATUS_EBADF;
 
-    	printk("[SYS READ] Start pos = %d, size = %d\n", cur_fd->pos, cur_fd->size);
+//    	printk("[SYS READ] Start pos = %d, size = %d\n", cur_fd->pos, cur_fd->size);
     	int count = 0;
     	if (cur_fd->pos + len > cur_fd->size) 
         	count = cur_fd->size - cur_fd->pos;
@@ -156,7 +156,7 @@ int sys_read(int fd, void *buf, size_t len)
         	count = len;
         
     	ret_val = cur_fd->fs->ops->read(cur_fd, buf, count);
-    	printk("[SYS READ] ret = 0x%x, %s\n", ret_val, buf);
+//    	printk("[SYS READ] ret = 0x%x, %s\n", ret_val, buf);
     
     	return ret_val;
 }
@@ -164,9 +164,11 @@ int sys_write(int fd, const void *buf, size_t len)
 {
 /* TODO */
 	int ret_val;
+
     	struct fs_fd *cur_fd = (struct fs_fd *) KADDR(fd);
 
     	struct PageInfo* page = page_lookup(cur_task->pgdir, buf, NULL);
+
     	if (page == NULL)
         	return -STATUS_EINVAL;
     	else if (!check_valid_fd(cur_fd))
@@ -224,7 +226,7 @@ int sys_unlink(const char *pathname)
             		} 
         	}
     	}
-    	printk("[UNLINK] ret = %d\n", ret);     
+//    	printk("[UNLINK] ret = %d\n", ret);     
     	return errno(-ret);
 }
 

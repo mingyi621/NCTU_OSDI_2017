@@ -67,7 +67,8 @@ DSTATUS disk_initialize (BYTE pdrv)
   /* Note: You can create a function under disk.c  
    *       to help you get the disk status.
    */
-	printk("Disk_initialize: %d\n", pdrv);
+//	printk("Disk_initialize: %d\n", pdrv);
+	disk_init();
 	return 0;
 }
 

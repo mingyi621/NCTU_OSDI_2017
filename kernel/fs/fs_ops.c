@@ -54,7 +54,7 @@ int fat_mount(struct fs_dev *fs, const void* data)
 int fat_mkfs(const char* device_name)
 {
 	int res;
-//    	printk("[MKFS] Device : %s\n", device_name);
+    	printk("[MKFS] Device : %s\n", device_name);
     	res = f_mkfs("/", 0, 0);
 
     	if (res != 0)
@@ -134,7 +134,7 @@ int fat_write(struct fs_fd* file, const void* buf, size_t count)
 int fat_lseek(struct fs_fd* file, off_t offset)
 {
 	int retVal = f_lseek(file->data, offset);
-	printk("[%s] retVal: %d\n", __func__, retVal);
+//	printk("[%s] retVal: %d\n", __func__, retVal);
 	if(retVal != 0)
 		return -retVal;
 	return 0;
