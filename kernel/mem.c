@@ -321,6 +321,7 @@ page_init(void)
 	 * copy and run AP bootstrap code at that physical address
 	 *
 	 */
+
     size_t i;
 	page_free_list = NULL;
 	int num_alloc = ((uint32_t)boot_alloc(0) - KERNBASE) / PGSIZE;

@@ -72,7 +72,7 @@ int fat_open(struct fs_fd* file)
     	uint32_t flags = 0;
     
     	flags |= O_WRONLY & file->flags ?  FA_WRITE : 0;
-    	flags |= (O_CREAT & file->flags) && (O_TRUNC & file->flags) ? FA_CREATE_ALWAYS : 0;
+//    	flags |= (O_CREAT & file->flags) && (O_TRUNC & file->flags) ? FA_CREATE_ALWAYS : 0;
     	flags |= (O_CREAT & file->flags) && !(O_TRUNC & file->flags) ? FA_CREATE_NEW : 0;
     	flags |= file->flags == 0 ? FA_READ : 0;
     	flags |= O_RDWR & file->flags ? FA_READ|FA_WRITE : 0; 

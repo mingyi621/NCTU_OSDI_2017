@@ -13,6 +13,7 @@ SECTIONS
   /* AT(...) gives the load address of this section, which tells
   the boot loader where to load the kernel in physical memory */
 . = ALIGN(0x1000);
+    PROVIDE(CODE_START = .);
 PROVIDE(UTEXT_start = .);
 PROVIDE(stext = .);
 .text : AT(0x100000) {

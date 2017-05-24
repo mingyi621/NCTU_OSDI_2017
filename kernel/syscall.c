@@ -154,9 +154,12 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
 //    break;
         	retVal = sys_unlink(a1);
         	break;
-//  case SYS_list:
-//        	retVal = sys_list(a1);
-//        	break;  
+  case SYS_list:
+        	retVal = sys_list(a1);
+        	break;  
+  case SYS_remove:
+		retVal = sys_remove(a1);
+		break;
 
   	}
 //>>>>>>> 4447810545876b2afa9a5379040c05fac9e87200

@@ -28,6 +28,9 @@ int filetest4(int argc, char **argv);
 int filetest5(int argc, char **argv);
 int spinlocktest(int argc, char **argv);
 
+int list_files(int argc, char **argv);
+int remove_file(int argc, char **argv);
+
 
 struct Command commands[] = {
   { "help", "Display this list of commands", mon_help },
@@ -42,7 +45,10 @@ struct Command commands[] = {
   { "filetest3", "Laqrge block test", filetest3},
   { "filetest4", "Error test", filetest4},
   { "filetest5", "unlink test", filetest5},
-  { "spinlocktest", "Test spinlock", spinlocktest }
+  { "spinlocktest", "Test spinlock", spinlocktest },
+
+  { "ls", "list all files", list_files },
+  { "rm", "remove file", remove_file }
 };
 const int NCOMMANDS = (sizeof(commands)/sizeof(commands[0]));
 
@@ -529,6 +535,25 @@ int fs_speed_test(int argc, char **argv)
         close(fd);
     }
 }
+
+int list_files(int argc, char **argv){
+	if(argc < 2){
+		cprintf("Please enter correct format : ls $\{PATH\}\n");
+		return 0;
+	}
+	list(argv[1]);
+	return 0;
+}
+int remove_file(int argc, char **argv){
+	if(argc < 2){
+		cprintf("Please enter correct format : ls $\{PATH\}\n");
+		return 0;
+	}
+	list(argv[1]);
+	return 0;
+}
+
+ 
 
 void shell()
 {

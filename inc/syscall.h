@@ -23,7 +23,11 @@ enum {
   SYS_lseek,
   SYS_unlink,
   SYS_readdir,
-  NSYSCALLS
+  NSYSCALLS,
+  SYS_list,
+  SYS_test,
+  SYS_parent,
+  SYS_remove
 };
 
 int32_t get_num_used_page(void);

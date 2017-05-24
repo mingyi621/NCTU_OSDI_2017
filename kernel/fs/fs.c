@@ -107,12 +107,12 @@ int fs_mount(const char* device_name, const char* path, const void* data)
 /* Note: Before call ops->open() you may copy the path and flags parameters into fd object structure */
 int file_open(struct fs_fd* fd, const char *path, int flags)
 {
-
+//	return fat.fs_ops->open(fd,path,flags);
 }
 
 int file_read(struct fs_fd* fd, void *buf, size_t len)
 {
-
+//	return fat.fs_ops->read(fd,buf,len);
 }
 
 int file_write(struct fs_fd* fd, const void *buf, size_t len)
